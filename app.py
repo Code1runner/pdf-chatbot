@@ -1,7 +1,10 @@
+import huggingface_hub
 import streamlit as st
 from dotenv import load_dotenv
 from pypdf import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import FAISS 
+from langchain.embeddings import HuggingFaceInstructEmbeddings
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -21,6 +24,11 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
+def get_vectorstore(text_chunks):
+    embeddings = HuggingFaceInstructEmbeddings(model_name = "hkunlp/instructor-xl")
+    vectorstore = FAISS.from_texts(text_chunks, embeddings)
+    return vectorstore
+
 def main():
     load_dotenv()
     st.set_page_config(page_title="Analyze and ask about multiple PDFs", page_icon=":books:")
@@ -37,6 +45,9 @@ def main():
                 raw_text = get_pdf_text(pdf_docs)
                 
                 text_chunks = get_text_chunks(raw_text)
-                st.write(text_chunks)
+
+                vectorstore = get_vectorstore(text_chunks)
+
+                #st.write(text_chunks)
 if __name__ == '__main__':
     main()
